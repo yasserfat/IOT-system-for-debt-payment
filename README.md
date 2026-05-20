@@ -65,14 +65,158 @@ Tap card  →  Enter PIN  →  Enter amount  →  Transaction result
 
 ```
 payper-rfid/
-├── platformio.ini          # Build configuration & library dependencies
-├── src/
-│   ├── config.h            # ← PUT YOUR CREDENTIALS HERE
-│   ├── main.cpp            # setup() / loop() + state machine
-│   ├── wifi_helper.h/.cpp  # Wi-Fi connection with LED feedback
-│   ├── firebase_helper.h/.cpp  # Firebase read/write wrappers
-│   └── display_helper.h/.cpp   # OLED helper functions
-└── website/                # Companion web application (add your files here)
+├── platformio.ini               # Build config & library dependencies
+├── circuit.png                  # ← drop your circuit image here
+├── src/                         # ESP32 firmware
+│   ├── config.h                 # ← PUT YOUR CREDENTIALS HERE
+│   ├── main.cpp                 # setup() / loop() + state machine
+│   ├── wifi_helper.h/.cpp       # Wi-Fi connection with LED feedback
+│   ├── firebase_helper.h/.cpp   # Firebase read/write wrappers
+│   └── display_helper.h/.cpp    # OLED helper functions
+└── website/                     # React web application
+    └── src/
+        ├── assets/              # Static images & icons per page
+        │   ├── accounts/
+        │   ├── landing/
+        │   ├── overview/
+        │   └── user-collect-data/
+        ├── components/          # Reusable UI components
+        │   ├── costum-ook/      # Custom hook(s) shared across pages
+        │   ├── landing/         # Hero / marketing section pieces
+        │   ├── main-navbar/     # Authenticated app top-bar
+        │   ├── main-sidebar/    # Authenticated app side navigation
+        │   ├── navbar/          # Public / landing page nav
+        │   ├── sidebar/         # Secondary sidebar variant
+        │   ├── table-all-transactions/  # Full transaction history table
+        │   ├── table-expense/   # Filtered expense table
+        │   ├── table-income/    # Filtered income table
+        │   ├── transactions-item/       # Single transaction row/card
+        │   └── wait-card/       # "Waiting for card scan" UI overlay
+        └── pages/               # One folder = one route
+            ├── accounts/        # Manage linked RFID cards & balances
+            ├── landing/         # Public marketing / home page
+            ├── login/           # Email + password sign-in
+            ├── overview/        # Dashboard – balance, recent activity
+            ├── register/        # New user registration
+            ├── send-money/      # Initiate a transfer to another account
+            ├── setting/         # Profile & app preferences
+            ├── splash/          # Initial loading / branding screen
+            ├── transactions/    # Full transaction history & filters
+            └── user-collect-data/  # Onboarding – collect user details
+```
+
+---
+
+## Web Application
+
+The React app runs alongside the hardware and acts as the "bank" side of the system. It listens to Firebase RTDB for card scans from the terminal and responds with the authentication and balance decisions the firmware needs.
+
+### Page overview
+
+| Page | Purpose |
+|------|---------|
+| **Splash** | Branded loading screen shown on first launch |
+| **Landing** | Public marketing page with product overview |
+| **Register / Login** | Firebase Auth-backed account creation and sign-in |
+| **User Collect Data** | Onboarding flow that gathers name, phone, etc. after registration |
+| **Overview** | Main dashboard: current balance, quick stats, recent transactions |
+| **Accounts** | List and manage RFID cards linked to the user's account |
+| **Send Money** | Transfer funds to another PayPer account |
+| **Transactions** | Full paginated history with income / expense filter tabs |
+| **Settings** | Profile editing and app preferences |
+
+### Screenshots
+
+#### Hardware
+
+| RC522 RFID Reader + Card | ESP32 Microcontroller |
+|:---:|:---:|
+| ![RFID](website/docs/screenshots/fig2.1-rfid.png) | ![ESP32](website/docs/screenshots/fig2.2-esp32.png) |
+
+#### Tech Stack
+
+| React.js | Tailwind CSS | Firebase |
+|:---:|:---:|:---:|
+| ![React](website/docs/screenshots/fig3.1-reactjs-logo.png) | ![Tailwind](website/docs/screenshots/fig3.2-tailwindcss-logo.png) | ![Firebase](website/docs/screenshots/fig3.3-firebase-logo.png) |
+
+#### Landing Page
+
+| Register entry point | Login entry point |
+|:---:|:---:|
+| ![Register buttons](website/docs/screenshots/fig3.4-landing-register-buttons.png) | ![Login buttons](website/docs/screenshots/fig3.5-landing-login-buttons.png) |
+
+#### Registration Flow (User / Cashier)
+
+| Enter email | Verification email | Enter code | Fill in profile |
+|:---:|:---:|:---:|:---:|
+| ![Email](website/docs/screenshots/fig3.6-register-email.png) | ![Email code](website/docs/screenshots/fig3.7-verification-email.png) | ![Code entry](website/docs/screenshots/fig3.8-enter-verification-code.png) | ![User data](website/docs/screenshots/fig3.9-user-enters-data.png) |
+
+#### Registration Flow (Admin)
+
+| Enter email | Enter verification code | Fill in admin data |
+|:---:|:---:|:---:|
+| ![Admin email](website/docs/screenshots/fig3.10-admin-email.png) | ![Admin code](website/docs/screenshots/fig3.12-admin-verification-code.png) | ![Admin data](website/docs/screenshots/fig3.13-admin-data.png) |
+
+#### Login
+
+![Login page](website/docs/screenshots/fig3.14-login-page.png)
+
+#### Dashboard (Overview)
+
+| Card pending verification | Card verified & active |
+|:---:|:---:|
+| ![Pending](website/docs/screenshots/fig3.15-overview-card-pending.png) | ![Verified](website/docs/screenshots/fig3.16-overview-card-verified.png) |
+
+| Admin – all users list |
+|:---:|
+| ![Admin users](website/docs/screenshots/fig3.17-admin-users-list.png) |
+
+#### Transactions
+
+| All transactions | Expenses only | Income only |
+|:---:|:---:|:---:|
+| ![All](website/docs/screenshots/fig3.18-all-transactions.png) | ![Expenses](website/docs/screenshots/fig3.19-expenses.png) | ![Income](website/docs/screenshots/fig3.20-income.png) |
+
+#### Accounts
+
+| User – balance & card info | Admin – verify accounts | Admin – scan card popup |
+|:---:|:---:|:---:|
+| ![User accounts](website/docs/screenshots/fig3.21-accounts-user.png) | ![Admin verify](website/docs/screenshots/fig3.22-accounts-admin-verify.png) | ![Scan card](website/docs/screenshots/fig3.23-admin-scan-card.png) |
+
+#### Settings
+
+![Settings](website/docs/screenshots/fig3.24-settings-user-data.png)
+
+### Component overview
+
+| Component | Purpose |
+|-----------|---------|
+| `main-navbar` / `main-sidebar` | Shell navigation shown on all authenticated pages |
+| `navbar` / `sidebar` | Lightweight nav used on public (pre-login) pages |
+| `wait-card` | Overlay that appears while the terminal is scanning a card |
+| `table-all-transactions` | Complete transaction list with sorting |
+| `table-expense` / `table-income` | Filtered views of the same data |
+| `transactions-item` | Individual transaction row rendered inside any of the tables |
+| `costum-ook` | Shared custom React hook(s) (e.g. Firebase listener, auth guard) |
+
+### Setup
+
+```bash
+cd website
+npm install
+npm run dev      # Vite dev server  (or: npm start for CRA)
+```
+
+Create a `.env` file in `website/` with your Firebase config:
+
+```env
+VITE_API_KEY=your_firebase_api_key
+VITE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+VITE_PROJECT_ID=your-project-id
+VITE_STORAGE_BUCKET=your-project.appspot.com
+VITE_MESSAGING_SENDER_ID=your_sender_id
+VITE_APP_ID=your_app_id
 ```
 
 ---
