@@ -19,45 +19,77 @@ Tap card  →  Enter PIN  →  Enter amount  →  Transaction result
 
 ## Hardware
 
-| Component | Notes |
-|-----------|-------|
-| ESP32 dev board | Any 38-pin variant |
-| RC522 RFID reader | SPI |
-| 4×4 matrix keypad | |
-| SSD1306 OLED 128×64 | I²C, address `0x3C` |
-| Green LED | GPIO 12 |
-| Red LED | GPIO 2 |
-| Buzzer | GPIO 16 |
+| Component | Quantity | Notes |
+|-----------|:--------:|-------|
+| ESP32 dev board | 1 | Any 38-pin variant |
+| RC522 RFID reader | 1 | SPI interface |
+| 4×4 matrix keypad | 1 | Membrane type |
+| SSD1306 OLED 128×64 | 1 | I²C, address `0x3C` |
+| Active buzzer | 1 | 5 V, GPIO 16 |
+| Green LED | 1 | GPIO 12 — Wi-Fi connected / success |
+| Red LED | 1 | GPIO 2 — Wi-Fi connecting / error |
+| Resistor 220 Ω | 2 | Current-limiting for green and red LEDs |
 
 ### Circuit Diagram
 
-<!-- Add your circuit image below -->
+<!-- Drop your circuit image here -->
 ![Circuit Diagram](circuit.png)
 
 ### Pin Connections
 
-#### RC522 (SPI)
-| RC522 | ESP32 |
-|-------|-------|
-| SDA (SS) | GPIO 5 |
-| SCK | GPIO 18 |
-| MOSI | GPIO 23 |
-| MISO | GPIO 19 |
-| RST | GPIO 0 |
-| 3.3V | 3.3V |
-| GND | GND |
+#### RC522 RFID Reader (SPI)
 
-#### Keypad
-| Row / Col | ESP32 GPIO |
-|-----------|-----------|
-| Row 1–4 | 14, 27, 26, 25 |
-| Col 1–4 | 4, 32, 13, 15 |
+| RC522 Pin | ESP32 GPIO | Notes |
+|-----------|-----------|-------|
+| SDA (SS) | GPIO 5 | Chip select |
+| SCK | GPIO 18 | SPI clock |
+| MOSI | GPIO 23 | Master out |
+| MISO | GPIO 19 | Master in |
+| RST | GPIO 0 | Reset |
+| 3.3V | 3.3V | **Do not use 5 V** |
+| GND | GND | |
 
-#### OLED (I²C)
-| OLED | ESP32 |
-|------|-------|
+#### 4×4 Matrix Keypad
+
+| Keypad Pin | ESP32 GPIO |
+|------------|-----------|
+| Row 1 | GPIO 14 |
+| Row 2 | GPIO 27 |
+| Row 3 | GPIO 26 |
+| Row 4 | GPIO 25 |
+| Col 1 | GPIO 4 |
+| Col 2 | GPIO 32 |
+| Col 3 | GPIO 13 |
+| Col 4 | GPIO 15 |
+
+The keypad library drives rows as outputs and reads columns as inputs with internal pull-ups; no external resistors needed on the keypad lines.
+
+#### SSD1306 OLED (I²C)
+
+| OLED Pin | ESP32 GPIO |
+|----------|-----------|
 | SDA | GPIO 21 |
 | SCL | GPIO 22 |
+| VCC | 3.3V |
+| GND | GND |
+
+#### LEDs & Resistors
+
+| Component | ESP32 GPIO | Resistor | Wiring |
+|-----------|-----------|----------|--------|
+| Green LED (anode) | GPIO 12 | 220 Ω in series | GPIO 12 → 220 Ω → LED anode → LED cathode → GND |
+| Red LED (anode) | GPIO 2 | 220 Ω in series | GPIO 2 → 220 Ω → LED anode → LED cathode → GND |
+
+> A 220 Ω resistor limits current to ~15 mA on a 3.3 V output, which is within the ESP32's 40 mA per-pin maximum and gives comfortable LED brightness.
+
+#### Active Buzzer
+
+| Buzzer Pin | ESP32 GPIO | Notes |
+|------------|-----------|-------|
+| + (positive) | GPIO 16 | Drive HIGH to activate |
+| − (negative) | GND | |
+
+> Use an **active** buzzer (has internal oscillator). If you use a passive buzzer, the `tone()` call in the firmware is still correct but you may need to adjust the frequency.
 
 ---
 
@@ -124,68 +156,6 @@ The React app runs alongside the hardware and acts as the "bank" side of the sys
 | **Send Money** | Transfer funds to another PayPer account |
 | **Transactions** | Full paginated history with income / expense filter tabs |
 | **Settings** | Profile editing and app preferences |
-
-### Screenshots
-
-#### Hardware
-
-| RC522 RFID Reader + Card | ESP32 Microcontroller |
-|:---:|:---:|
-| ![RFID](website/docs/screenshots/fig2.1-rfid.png) | ![ESP32](website/docs/screenshots/fig2.2-esp32.png) |
-
-#### Tech Stack
-
-| React.js | Tailwind CSS | Firebase |
-|:---:|:---:|:---:|
-| ![React](website/docs/screenshots/fig3.1-reactjs-logo.png) | ![Tailwind](website/docs/screenshots/fig3.2-tailwindcss-logo.png) | ![Firebase](website/docs/screenshots/fig3.3-firebase-logo.png) |
-
-#### Landing Page
-
-| Register entry point | Login entry point |
-|:---:|:---:|
-| ![Register buttons](website/docs/screenshots/fig3.4-landing-register-buttons.png) | ![Login buttons](website/docs/screenshots/fig3.5-landing-login-buttons.png) |
-
-#### Registration Flow (User / Cashier)
-
-| Enter email | Verification email | Enter code | Fill in profile |
-|:---:|:---:|:---:|:---:|
-| ![Email](website/docs/screenshots/fig3.6-register-email.png) | ![Email code](website/docs/screenshots/fig3.7-verification-email.png) | ![Code entry](website/docs/screenshots/fig3.8-enter-verification-code.png) | ![User data](website/docs/screenshots/fig3.9-user-enters-data.png) |
-
-#### Registration Flow (Admin)
-
-| Enter email | Enter verification code | Fill in admin data |
-|:---:|:---:|:---:|
-| ![Admin email](website/docs/screenshots/fig3.10-admin-email.png) | ![Admin code](website/docs/screenshots/fig3.12-admin-verification-code.png) | ![Admin data](website/docs/screenshots/fig3.13-admin-data.png) |
-
-#### Login
-
-![Login page](website/docs/screenshots/fig3.14-login-page.png)
-
-#### Dashboard (Overview)
-
-| Card pending verification | Card verified & active |
-|:---:|:---:|
-| ![Pending](website/docs/screenshots/fig3.15-overview-card-pending.png) | ![Verified](website/docs/screenshots/fig3.16-overview-card-verified.png) |
-
-| Admin – all users list |
-|:---:|
-| ![Admin users](website/docs/screenshots/fig3.17-admin-users-list.png) |
-
-#### Transactions
-
-| All transactions | Expenses only | Income only |
-|:---:|:---:|:---:|
-| ![All](website/docs/screenshots/fig3.18-all-transactions.png) | ![Expenses](website/docs/screenshots/fig3.19-expenses.png) | ![Income](website/docs/screenshots/fig3.20-income.png) |
-
-#### Accounts
-
-| User – balance & card info | Admin – verify accounts | Admin – scan card popup |
-|:---:|:---:|:---:|
-| ![User accounts](website/docs/screenshots/fig3.21-accounts-user.png) | ![Admin verify](website/docs/screenshots/fig3.22-accounts-admin-verify.png) | ![Scan card](website/docs/screenshots/fig3.23-admin-scan-card.png) |
-
-#### Settings
-
-![Settings](website/docs/screenshots/fig3.24-settings-user-data.png)
 
 ### Component overview
 
