@@ -33,7 +33,7 @@ Tap card  →  Enter PIN  →  Enter amount  →  Transaction result
 ### Circuit Diagram
 
 <!-- Drop your circuit image here -->
-![Circuit Diagram](circuit.png)
+![Circuit Diagram](payper_circuit_diagram.svg)
 
 ### Pin Connections
 
